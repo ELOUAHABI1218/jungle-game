@@ -22,7 +22,7 @@ public class Partie {
     private Joueur nomJoueur1;
     private Joueur nomJoueur2;
     private Joueur nomVainqueur;
-    private LocalDateTime dateDebut;
+    private LocalDateTime dateDebut=LocalDateTime.now();
     private LocalDateTime dateFin;
     private int joueurActuel;
 
@@ -36,15 +36,15 @@ public class Partie {
         this.nomJoueur1 = new Joueur("Joueur " + idJoueur1);
         this.nomJoueur2 = new Joueur("Joueur " + idJoueur2);
     }
-    public Partie(int id, Joueur nomJoueur1, Joueur nomJoueur2, Plateau plateau) {
-        this.id = id;
-        this.nomJoueur1 = nomJoueur1;
-        this.nomJoueur2= nomJoueur2;
+    public Partie(Joueur joueur1, Joueur joueur2, Plateau plateau) {
+        this.idJoueur1 = joueur1.getId();
+        this.idJoueur2 = joueur2.getId();
         this.plateau = plateau;
         this.dateDebut = LocalDateTime.now();
+        this.joueurActuel = 1;
     }
 
-    public Partie(int id, int joueur1Id, int joueur2Id, int vainqueurId, String nomJoueur1, String nomJoueur2, String nomVainqueur, LocalDateTime dateDebut, LocalDateTime dateFin) {
+    public Partie(int id, int joueur1Id, int joueur2Id, int vainqueurId, String nomJoueur1, String nomJoueur2, String nomVainqueur) {
         this.id=id;
         this.idJoueur1=joueur1Id;
         this.idJoueur2=joueur2Id;
@@ -53,14 +53,13 @@ public class Partie {
         this.nomJoueur2=new Joueur(nomJoueur2);
         this.nomVainqueur=new Joueur(nomVainqueur);
 
-
-
     }
 
 
     public Plateau getPlateau() {
         return plateau;
     }
+
     public Integer getIdVainqueur() {
         return idVainqueur; }
     public void setIdVainqueur(Integer idVainqueur) {
@@ -86,15 +85,12 @@ public class Partie {
 
 
 
-    public LocalDateTime getDateDebut() {
-        return dateDebut;
+
+    public  Joueur getNomVainqueur() {
+
+        return nomVainqueur;
     }
-    public String getNomVainqueur() {
-        if (this.nomVainqueur == null) {
-            return null;
-        }
-        return this.nomVainqueur.getNomUtilisateur();
-    }
+
 
     public int getJoueurActuel() {
         return joueurActuel;

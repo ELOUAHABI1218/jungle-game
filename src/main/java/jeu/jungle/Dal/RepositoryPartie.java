@@ -3,6 +3,7 @@ package jeu.jungle.Dal;
 import jeu.jungle.Bo.Partie;
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,38 +16,33 @@ public class RepositoryPartie implements IRepositoryPartie {
 
     @Override
     public boolean sauvegarderPartie(Partie partie) {
-        String sql = "INSERT INTO parties(joueur1_id, joueur2_id, vainqueur_id, date_debut, date_fin) " +
-                "VALUES(?, ?, ?, ?, ?)";
 
-        try (Connection conn = connexionBD.obtenirConnexion();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String sql = "INSERT INTO parties(joueur1_id, joueur2_id, vainqueur_id) VALUES(?, ?, ?)";
 
-            // Gestion des joueurs
-            stmt.setInt(1, partie.getIdJoueur1());
-            stmt.setInt(2, partie.getIdJoueur2());
+            try (Connection conn = connexionBD.obtenirConnexion();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            // Gestion du vainqueur (nullable)
-            if (partie.getIdVainqueur() != null) {
-                stmt.setInt(3, partie.getIdVainqueur());
-            } else {
-                stmt.setNull(3, Types.INTEGER);
+
+
+                stmt.setInt(1, partie.getNomJoueur1().getId());
+                stmt.setInt(2, partie.getNomJoueur2().getId());
+
+                if (partie.getIdVainqueur() != null) {
+                    stmt.setInt(3, partie.getNomVainqueur().getId());
+                } else {
+                    stmt.setNull(3, Types.INTEGER);
+                }
+
+
+
+                return stmt.executeUpdate() > 0;
+            } catch (SQLException e) {
+                System.err.println("Erreur SQL: " + e.getMessage());
+                return false;
             }
-
-            // Gestion des dates (protection contre null)
-            Timestamp dateDebut = partie.getDateDebut() != null
-                    ? Timestamp.valueOf(partie.getDateDebut())
-                    : null;
-            stmt.setTimestamp(4, dateDebut);
-
-            // Date de fin = maintenant (toujours non-nulle)
-            stmt.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now()));
-
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Erreur sauvegarde partie: " + e.getMessage());
-            return false;
         }
-    }
+
+
 
     @Override
     public List<Partie> obtenirHistoriqueJoueur(int idJoueur) {
@@ -74,10 +70,8 @@ public class RepositoryPartie implements IRepositoryPartie {
                         rs.getInt("vainqueur_id"),
                         rs.getString("nom_joueur1"),
                         rs.getString("nom_joueur2"),
-                        rs.getString("nom_vainqueur"),
-                        rs.getTimestamp("date_debut").toLocalDateTime(),
-                        rs.getTimestamp("date_fin").toLocalDateTime()
-                );
+                        rs.getString("nom_vainqueur")
+                        );
                 historique.add(partie);
             }
         } catch (SQLException e) {

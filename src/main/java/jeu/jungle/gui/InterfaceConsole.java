@@ -12,17 +12,20 @@ import jeu.jungle.Bo.Plateau;
 import jeu.jungle.Dal.IRepositoryJoueur;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 
 public class InterfaceConsole {
     private final IServiceAuthentification serviceAuth;
     private final IServiceJeu serviceJeu;
+    private final IRepositoryJoueur repositoryJoueur ;
     private final Scanner scanner;
     private Joueur joueurConnecte;
 
-    public InterfaceConsole(IServiceAuthentification serviceAuth, IServiceJeu serviceJeu) {
+    public InterfaceConsole(IServiceAuthentification serviceAuth, IServiceJeu serviceJeu,IRepositoryJoueur repositoryJoueur) {
         this.serviceAuth = serviceAuth;
         this.serviceJeu = serviceJeu;
+        this.repositoryJoueur=repositoryJoueur;
         this.scanner = new Scanner(System.in);
     }
 
@@ -45,7 +48,7 @@ public class InterfaceConsole {
         System.out.print("Votre choix : ");
 
         int choix = scanner.nextInt();
-        scanner.nextLine(); // Nettoyer le buffer
+        scanner.nextLine();
 
         switch (choix) {
             case 1 -> connecterJoueur();
@@ -56,7 +59,7 @@ public class InterfaceConsole {
     }
 
     private void connecterJoueur() {
-        System.out.print("Nom d'utilisateur : ");
+        System.out.print("Nom de joueur : ");
         String nom = scanner.nextLine();
         System.out.print("Mot de passe : ");
         String mdp = scanner.nextLine();
@@ -70,7 +73,7 @@ public class InterfaceConsole {
     }
 
     private void inscrireJoueur() {
-        System.out.print("Choisir un nom d'utilisateur : ");
+        System.out.print("Choisir un nom de joueur : ");
         String nom = scanner.nextLine();
         System.out.print("Choisir un mot de passe : ");
         String mdp = scanner.nextLine();
@@ -78,7 +81,7 @@ public class InterfaceConsole {
         if (serviceAuth.inscrire(nom, mdp)) {
             System.out.println("Inscription réussie !");
         } else {
-            System.out.println("Ce nom d'utilisateur est déjà pris");
+            System.out.println("Ce nom de joueur est déjà pris");
         }
     }
 
@@ -103,13 +106,17 @@ public class InterfaceConsole {
     }
 
     private void demarrerNouvellePartie() {
-        System.out.print("Nom d'utilisateur de l'adversaire : ");
+        System.out.print("Nom de joueur de l'adversaire : ");
         String adversaire = scanner.nextLine();
 
-        // Création d'un joueur temporaire (remplacé par recherche en base)
-        Joueur joueur2 = new Joueur(0, adversaire, "", 0, 0, 0);
+        // Récupérer le vrai joueur depuis la base
+        Optional<Joueur> joueur2 = repositoryJoueur.trouverParNomUtilisateur(adversaire);
+        if (joueur2.isEmpty()) {
+            System.out.println("Joueur introuvable");
+            return;
+        }
 
-        Partie partie = serviceJeu.commencerNouvellePartie(joueurConnecte, joueur2);
+        Partie partie = serviceJeu.commencerNouvellePartie(joueurConnecte, joueur2.orElse(null));
         jouerPartie(partie);
     }
 
@@ -156,11 +163,11 @@ public class InterfaceConsole {
                         int x2 = Integer.parseInt(coordonnees[3]);
                         int y2 = Integer.parseInt(coordonnees[4]);
 
-                        // DEBUG: Afficher les coordonnées avant déplacement
+                        // Afficher les coordonnées avant déplacement
                         System.out.println("Tentative de déplacement de (" + x1 + "," + y1 + ") à (" + x2 + "," + y2 + ")");
 
                         if (serviceJeu.effectuerDeplacement(partie, x1, y1, x2, y2)) {
-                            // DEBUG: Confirmation du déplacement
+
                             System.out.println("Déplacement effectué avec succès!");
 
                             // Afficher le plateau APRÈS déplacement
@@ -233,7 +240,7 @@ public class InterfaceConsole {
             System.out.println("\n   +---+---+---+---+---+---+---+");
         }
 
-        // Légende améliorée
+
         System.out.println("\nLégende:");
         System.out.println("S: Sanctuaire | P: Piège | ~~~: Rivière");
         System.out.println("Li:Lion, Ti:Tigre, El:Éléphant, Pa:Panthère");
@@ -246,7 +253,7 @@ public class InterfaceConsole {
         System.out.println("- aide : Afficher les règles");
     }
 
-    // Méthodes utilitaires adaptées pour 9x7
+
     private boolean estSanctuaire(int x, int y) {
         return (x == 3 && y == 0) || (x == 3 && y == 8); // Colonne D, lignes 1 et 9
     }
@@ -258,7 +265,7 @@ public class InterfaceConsole {
     }
 
     private boolean estRiviere(int x, int y) {
-        // Zone centrale verticale (2 colonnes centrales)
+
         return (x == 1 || x == 2 || x == 4|| x == 5) && (y >= 3 && y <= 5);
     }
 
@@ -286,7 +293,7 @@ public class InterfaceConsole {
         } else {
             String message = partie.getIdVainqueur().equals(joueurConnecte.getId())
                     ? "\n    ----------------------- Félicitations ! Vous avez gagné! ---------------------\n"
-                    : " \n   ------------------------  Le vainqueur est " + partie.getNomVainqueur()+"  ------------------------\n";
+                    : " \n   ------------------------  Le vainqueur est " + partie.getNomVainqueur().getNomUtilisateur()+"  ------------------------\n";
             System.out.println(message);
         }
     }
@@ -298,20 +305,16 @@ public class InterfaceConsole {
         if (historique.isEmpty()) {
             System.out.println("Aucune partie enregistrée");
         } else {
-            for (Partie partie : historique) {
-                String resultat;
-                if (partie.getIdVainqueur() == null) {
-                    resultat = "Égalité";
-                } else if (partie.getNomVainqueur().equals(joueurConnecte.getNomUtilisateur())) {
-                    resultat = "Victoire";
-                } else {
-                    resultat = "Défaite";
-                }
 
-                System.out.printf("%s vs %s - %s \n",
+            for (Partie partie : historique) {
+                 String vainqueur=partie.getNomVainqueur().getNomUtilisateur();
+                if (partie.getNomVainqueur().getNomUtilisateur()==null){
+                    vainqueur="Match nul - aucun vainqueur";
+                }
+                System.out.printf("%s  vs  %s  \n - Vainqueur :  %s \n",
                         partie.getNomJoueur1().getNomUtilisateur(),
                         partie.getNomJoueur2().getNomUtilisateur(),
-                        resultat);
+                        vainqueur);
             }
         }
     }

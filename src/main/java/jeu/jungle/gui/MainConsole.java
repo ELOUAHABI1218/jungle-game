@@ -24,7 +24,7 @@ public class MainConsole {
         ServiceJeu serviceJeu = new ServiceJeu(repositoryPartie);
 
         // Création et démarrage de l'interface
-        InterfaceConsole interfaceJeu = new InterfaceConsole(serviceAuth, serviceJeu);
+        InterfaceConsole interfaceJeu = new InterfaceConsole(serviceAuth, serviceJeu,repositoryJoueur);
         interfaceJeu.demarrer();
     }
     }
