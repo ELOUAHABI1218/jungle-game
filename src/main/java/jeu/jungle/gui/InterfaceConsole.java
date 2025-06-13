@@ -233,7 +233,7 @@ public class InterfaceConsole {
             System.out.println("\n   +---+---+---+---+---+---+---+");
         }
 
-        // Légende améliorée
+        
         System.out.println("\nLégende:");
         System.out.println("S: Sanctuaire | P: Piège | ~~~: Rivière");
         System.out.println("Li:Lion, Ti:Tigre, El:Éléphant, Pa:Panthère");
